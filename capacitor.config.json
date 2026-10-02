@@ -1,0 +1,15 @@
+{
+  "appId": "com.dailyoptimisation.app",
+  "appName": "Optimise",
+  "webDir": "www",
+  "backgroundColor": "#0e1013",
+  "ios": {
+    "contentInset": "never",
+    "backgroundColor": "#0e1013"
+  },
+  "plugins": {
+    "CapacitorHttp": {
+      "enabled": true
+    }
+  }
+}

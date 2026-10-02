@@ -1,0 +1,18 @@
+{
+  "name": "optimise-ios",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Daily Optimisation: diet, workouts, progress and habits, as an iPhone app",
+  "dependencies": {
+    "@capacitor/core": "^6.2.0",
+    "@capacitor/ios": "^6.2.0",
+    "@capacitor/filesystem": "^6.0.0",
+    "@capacitor/local-notifications": "^6.1.0",
+    "@capacitor/share": "^6.0.0",
+    "@capacitor/status-bar": "^6.0.0",
+    "html5-qrcode": "2.3.8"
+  },
+  "devDependencies": {
+    "@capacitor/cli": "^6.2.0"
+  }
+}
