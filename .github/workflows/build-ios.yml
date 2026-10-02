@@ -1,0 +1,70 @@
+name: Build iOS app (unsigned IPA)
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+
+jobs:
+  build:
+    runs-on: macos-latest
+    timeout-minutes: 60
+    steps:
+      - name: Get the project
+        uses: actions/checkout@v4
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Prepare the web files (bundle the barcode scanner)
+        run: |
+          cp node_modules/html5-qrcode/html5-qrcode.min.js www/html5-qrcode.min.js
+          sed -i '' 's#https://cdn.jsdelivr.net/npm/html5-qrcode@2.3.8/html5-qrcode.min.js#html5-qrcode.min.js#' www/index.html
+          grep -n "html5-qrcode.min.js" www/index.html
+
+      - name: Create the iOS project
+        run: npx cap add ios
+
+      - name: Add the app icon and the camera permission text
+        run: |
+          cp resources/icon-1024.png ios/App/App/Assets.xcassets/AppIcon.appiconset/AppIcon-512@2x.png
+          PLIST=ios/App/App/Info.plist
+          /usr/libexec/PlistBuddy -c "Add :NSCameraUsageDescription string Used to scan food barcodes" "$PLIST" || true
+          /usr/libexec/PlistBuddy -c "Add :ITSAppUsesNonExemptEncryption bool false" "$PLIST" || true
+          cat "$PLIST"
+
+      - name: Copy the web app into the iOS project
+        run: npx cap sync ios
+
+      - name: Build the app (unsigned)
+        run: |
+          cd ios/App
+          xcodebuild \
+            -workspace App.xcworkspace \
+            -scheme App \
+            -configuration Release \
+            -sdk iphoneos \
+            -destination 'generic/platform=iOS' \
+            -archivePath "$PWD/build/App.xcarchive" \
+            CODE_SIGNING_ALLOWED=NO CODE_SIGNING_REQUIRED=NO CODE_SIGN_IDENTITY="" \
+            archive
+
+      - name: Package the IPA
+        run: |
+          cd ios/App/build
+          mkdir -p Payload
+          cp -R App.xcarchive/Products/Applications/App.app Payload/
+          zip -qry ../../../Optimise-unsigned.ipa Payload
+          ls -lh ../../../Optimise-unsigned.ipa
+
+      - name: Save the IPA so you can download it
+        uses: actions/upload-artifact@v4
+        with:
+          name: Optimise-ipa
+          path: Optimise-unsigned.ipa
+          retention-days: 30
